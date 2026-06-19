@@ -5,26 +5,27 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dazzle-linklib"
 dynamic = ["version"]
-description = "A new project created from git-repokit-template"
+description = "Content-addressable link-record library -- the DazzleLib stack's L2 serialization layer (typed locators, content_id, export/import/rebase/scan)."
 readme = "README.md"
-license = {text = "GPL-3.0-or-later"}
-requires-python = ">=3.10"
+license = {text = "MIT"}
+requires-python = ">=3.9"
 authors = [
     {name = "djdarcy", email = "djdarcy@users.noreply.github.com"},
 ]
-keywords = []
+keywords = ["dazzlelib", "links", "symlink", "junction", "serialization", "content-addressable", "anti-link-rot", "relinker", "stack"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
-    "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Topic :: Utilities",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Filesystems",
 ]
 
 dependencies = []
@@ -40,8 +41,8 @@ Homepage = "https://github.com/DazzleLib/dazzle-linklib"
 Repository = "https://github.com/DazzleLib/dazzle-linklib"
 Issues = "https://github.com/DazzleLib/dazzle-linklib/issues"
 
-[project.scripts]
-dazzle-linklib = "dazzle_linklib.cli:main"
+# Library-only: no console_scripts. The `dazzlelink` CLI lives in the
+# DazzleTools/dazzlelink tool, which consumes this library (STACK-MAP D1).
 
 [tool.setuptools.dynamic]
 version = {attr = "dazzle_linklib._version.PIP_VERSION"}
