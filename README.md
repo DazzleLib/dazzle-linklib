@@ -1,5 +1,11 @@
 # dazzle-linklib
 
+[![PyPI](https://img.shields.io/pypi/v/dazzle-linklib?color=green)](https://pypi.org/project/dazzle-linklib/)
+[![Release Date](https://img.shields.io/github/release-date/DazzleLib/dazzle-linklib?color=green)](https://github.com/DazzleLib/dazzle-linklib/releases)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20BSD-lightgrey.svg)](docs/platform-support.md)
+
 **Content-addressable link-record library** -- the **L2** serialization layer of
 the [DazzleLib stack](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md).
 
@@ -31,10 +37,11 @@ pointers" do not. (See the L2 design rationale, decision D6.)
 
 ## Status
 
-**Scaffold (0.1.0, pre-alpha).** The extraction of `DazzleLinkData` and the
-resolver from the `dazzlelink` tool is stack phase **P2** -- see the
-[Roadmap](https://github.com/DazzleLib/dazzle-linklib/issues/2). Today the
-package exposes only its version.
+**0.1.0 is a name-reservation placeholder (pre-alpha).** It is published to
+PyPI to claim the name, but exposes only its version -- there is no functional
+content yet. The extraction of `DazzleLinkData` and the resolver from the
+`dazzlelink` tool is stack phase **P2** and lands in a later release -- see the
+[Roadmap](https://github.com/DazzleLib/dazzle-linklib/issues/2).
 
 ## Installation
 
