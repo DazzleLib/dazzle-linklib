@@ -35,7 +35,9 @@ classifiers = [
 # unctools (L0) joins when the UNC-identity delegation code lands.
 dependencies = [
     "dazzle-lib>=0.1.0",
-    "dazzle-filekit>=0.3.0",
+    # >=0.3.1: 0.3.0 corrupted a symlink TARGET's timestamps when applying a
+    # record's timestamps to the link; the operations rely on the 0.3.1 fix.
+    "dazzle-filekit>=0.3.1",
 ]
 
 [project.optional-dependencies]

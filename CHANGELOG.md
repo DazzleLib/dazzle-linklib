@@ -11,6 +11,16 @@ release (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.2.2] -- 2026-06-20
+
+### Fixed
+- Require `dazzle-filekit>=0.3.1`. filekit 0.3.0 corrupted a symlink **target's**
+  timestamps when `apply_record_metadata` / `recreate_link` applied a record's
+  timestamps to a link (`os.utime` and the default Win32 handle follow the
+  reparse point to the target). The fix lives in filekit 0.3.1 (link-targeting
+  `SetFileTime` / `os.utime(follow_symlinks=False)`); the dependency floor is
+  raised so the operations get correct behavior.
+
 ## [0.2.1] -- 2026-06-20
 
 ### Added
@@ -91,7 +101,8 @@ injectable target resolver. Verified wire-compatible with the published
 - The `DazzleLinkData` extraction + resolver (stack phase P2) is **not yet
   shipped** -- it lands in a later release (Roadmap, issue #2).
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-linklib/releases/tag/v0.1.0
