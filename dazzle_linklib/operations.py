@@ -180,6 +180,18 @@ def recreate_link(
 
     if update_record:
         record.update_metadata(reason="symlink_recreation")
+        # When recreating against a live target, fold the target's current
+        # timestamps back into the record so the saved .dazzlelink reflects what
+        # was actually linked.
+        if use_live_target and timestamp_strategy in ("target", "preserve-all", "preserve"):
+            target = record.get_target_path()
+            if target and os.path.exists(target):
+                live = fk.collect_file_metadata(target).get("timestamps") or {}
+                record.set_target_timestamps(
+                    created=live.get("created"),
+                    modified=live.get("modified"),
+                    accessed=live.get("accessed"),
+                )
         record.save_to_file(dazzlelink_path)
 
     return str(link_path)

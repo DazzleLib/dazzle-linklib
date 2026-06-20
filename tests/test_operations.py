@@ -158,6 +158,34 @@ def test_recreate_link_restores_windows_attributes(tmp_path, needs_symlinks):
     assert target.read_text(encoding="utf-8") == "payload"
 
 
+def test_recreate_link_update_record_refreshes_target_timestamps(tmp_path, needs_symlinks):
+    # update_record + use_live_target + target strategy folds the live target's
+    # timestamps back into the saved record.
+    target = tmp_path / "asset.bin"
+    target.write_text("payload", encoding="utf-8")
+    link = tmp_path / "asset.lnk"
+
+    rec = DazzleLinkData()
+    rec.set_target_path(str(target))
+    rec.set_original_path(str(link))
+    # Stale recorded target timestamps (clearly not the live ones).
+    rec.set_target_timestamps(created=1.0, modified=1.0, accessed=1.0)
+    dl = tmp_path / "asset.dazzlelink"
+    rec.save_to_file(str(dl))
+
+    recreate_link(
+        str(dl),
+        timestamp_strategy="target",
+        use_live_target=True,
+        update_record=True,
+    )
+
+    saved = DazzleLinkData.from_file(str(dl))
+    # The recorded target modified time was refreshed away from the stale 1.0.
+    assert saved.get_target_timestamps().get("modified") not in (None, 1.0)
+    assert "symlink_recreation" in saved.get_update_history()
+
+
 def test_recreate_link_unknown_strategy_raises(tmp_path, needs_symlinks):
     from dazzle_linklib import DazzleLinkError
 

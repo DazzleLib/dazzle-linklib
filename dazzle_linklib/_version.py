@@ -25,7 +25,7 @@ PHASE = ""  # Per-MINOR feature set: "" (stable), "alpha", "beta", "rc1", etc.
 PROJECT_PHASE = ""  # "prealpha", "alpha", "beta", "stable", or ""
 
 # Auto-updated by git hooks - do not edit manually
-__version__ = "0.2.0_main_10-20260620-aa41dff7"
+__version__ = "0.2.0_main_11-20260620-26061fc3"
 __app_name__ = "dazzle-linklib"
 
 
