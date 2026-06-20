@@ -31,6 +31,7 @@ disappears or moves.
 | record model (P2) | `DazzleLinkData`, `DazzleLinkError`, `DazzleLinkException` |
 | discovery / rebase (P2) | `find_dazzlelinks`, `scan`, `rebase` |
 | resolver (P2) | `resolve_target`, `ReachabilityResolver`, `default_reachability` |
+| operations (P2) | `export_link`, `import_link`, `create_link`, `recreate_link` |
 
 `DazzleLinkData` carries the v1 `.dazzlelink` schema plus the L2 additions: a
 typed locator list (`get_locators`/`add_locator`), an optional `content_id`, and
@@ -38,13 +39,9 @@ inter-record `relations`. `scan`/`rebase` operate on record **files** -- they do
 not discover or rewrite live OS symlinks (that is filesystem mechanics owned by
 `dazzle-filekit` L1 and the dazzlelink CLI tool). `resolve_target` walks a
 record's locators and returns the first the injected `ReachabilityResolver`
-judges reachable.
-
-## Planned surface (later P2)
-
-| Symbol | Role |
-|---|---|
-| `export_link` / `import_link` | JSON serialize / deserialize convenience wrappers |
+judges reachable. The operations own the record-policy and delegate OS mechanics
+(symlink creation, timestamp/metadata writes) to `dazzle-filekit` -- a consumer
+recreates a link from a record in one call rather than gluing the pieces itself.
 
 ## Upstream dependency (dazzle-lib)
 

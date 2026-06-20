@@ -29,11 +29,13 @@ classifiers = [
 ]
 
 # dazzle-lib (B, bedrock): Serializable / DazzleDataMixin / LinkError / LinkTargetDict.
-# dazzle-filekit (L1) and unctools (L0) join here as the delegation code that
-# imports them lands (timestamp/attr/UNC mechanics) -- declared with the code,
-# not ahead of it (STACK-MAP R3: deps are real, not aspirational).
+# dazzle-filekit (L1): the OS mechanics L2 operations delegate to internally
+# (symlink create, metadata/timestamp apply, relative-path compute) so consumers
+# call one L2 operation instead of gluing record-pieces + filekit themselves.
+# unctools (L0) joins when the UNC-identity delegation code lands.
 dependencies = [
     "dazzle-lib>=0.1.0",
+    "dazzle-filekit>=0.3.0",
 ]
 
 [project.optional-dependencies]

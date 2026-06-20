@@ -35,6 +35,19 @@ list, `content_id`, relation edges, and the injectable target resolver. It
 "Records that point at each other" live here; "walking and interpreting those
 pointers" do not. (See the L2 design rationale, decision D6.)
 
+## The stack
+
+| Layer | Library | Role |
+|---|---|---|
+| B | [dazzle-lib](https://github.com/DazzleLib/dazzle-lib) | bedrock contracts (Protocols, TypedDicts, exception root) |
+| L0 | [dazzle-unctools](https://github.com/DazzleLib/UNCtools) | path identity (UNC/drive/origin) |
+| L1 | [dazzle-filekit](https://github.com/DazzleLib/dazzle-filekit) | filesystem primitives |
+| L2 | **dazzle-linklib** (this) | link record + resolver |
+| L3 | dazzle-preservelib *(planned)* | operation orchestration |
+| ⊥ | [dazzle-treelib](https://github.com/DazzleLib/dazzle-tree-lib) | traversal engine |
+
+Full architecture contract: [STACK-MAP.md](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md). API stability policy: [docs/api-stability.md](docs/api-stability.md).
+
 ## Status
 
 **Pre-alpha (0.2.0) -- first functional release.** The link-record core (stack
@@ -82,7 +95,9 @@ cd dazzle-linklib
 pip install -e ".[dev]"
 ```
 
-## Development
+## Contributing
+
+Contributions welcome! Please open an issue or submit a pull request.
 
 ```bash
 python -m venv .venv
@@ -96,6 +111,20 @@ python -m pytest tests/ -v
 bash scripts/install-hooks.sh
 ```
 
+Two house rules this library lives by:
+- **Dependencies point down only.** L2 consumes the bedrock and the layers below
+  it; it never imports its consumers (the `dazzlelink` CLI or preserve). The
+  `tests/test_no_upstream_imports.py` canary enforces this.
+- **The public surface is locked.** Record/discovery/resolver symbols are pinned
+  by `tests/test_import_stability.py`; changes follow
+  **[docs/api-stability.md](docs/api-stability.md)** (locked surface, noisy-shim
+  deprecation, additive-only schema evolution).
+
+Like the project?
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/djdarcy)
+
 ## License
 
-MIT. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License -- see the [LICENSE](LICENSE) file
+for details. The whole DazzleLib stack is MIT (STACK-MAP D11).

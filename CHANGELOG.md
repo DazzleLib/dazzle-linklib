@@ -30,17 +30,24 @@ injectable target resolver. Verified wire-compatible with the published
   Protocol) + `default_reachability` -- the injectable resolver: the library
   owns the candidate walk, the checker judges reachability (filesystem default;
   Relinker injects a network checker).
+- `export_link` / `import_link` / `create_link` / `recreate_link` -- the
+  record-centric operations. They own the record-policy (where to link, which
+  timestamps a strategy implies) and delegate the OS mechanics (symlink
+  creation, timestamp/metadata writes) to `dazzle-filekit`, so a consumer
+  recreates a link from a record in one call instead of gluing record + filekit
+  together itself.
 - `DazzleLinkError` (rooted under `dazzle_lib.LinkError`) and the
   `DazzleLinkException` back-compat alias.
-- Test suite: 59 tests (record, discovery, resolver, cross-tool compat, the
-  no-upstream-import and locked-surface canaries) + a public human test
-  checklist.
+- Test suite: 66 tests (record, discovery, resolver, operations, cross-tool
+  compat, the no-upstream-import and locked-surface canaries) + a public human
+  test checklist.
 
 ### Changed
 - The public surface (`docs/api-stability.md` + the import-stability canary) now
-  locks the record/discovery/resolver symbols. `dazzle-lib>=0.1.0` is declared
-  as the (only) runtime dependency it imports; filekit/unctools are declared
-  with the delegation code when it lands.
+  locks the record/discovery/resolver/operations symbols. Runtime dependencies:
+  `dazzle-lib>=0.1.0` (bedrock contracts) and `dazzle-filekit>=0.3.0` (the OS
+  mechanics the operations delegate to); `unctools` joins when its delegation
+  code lands.
 
 ### Notes
 - `rebase` skips polyglot (executable-script) records rather than rewriting them

@@ -30,6 +30,7 @@ https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md
 from ._version import PIP_VERSION, __app_name__, __version__
 from .discovery import find_dazzlelinks, rebase, scan
 from .exceptions import DazzleLinkError, DazzleLinkException
+from .operations import create_link, export_link, import_link, recreate_link
 from .record import DazzleLinkData
 from .resolver import ReachabilityResolver, default_reachability, resolve_target
 
@@ -43,6 +44,10 @@ __all__ = [
     "find_dazzlelinks",
     "scan",
     "rebase",
+    "export_link",
+    "import_link",
+    "create_link",
+    "recreate_link",
     "resolve_target",
     "ReachabilityResolver",
     "default_reachability",

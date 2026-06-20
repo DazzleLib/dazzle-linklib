@@ -25,6 +25,11 @@ LOCKED_SURFACE = {
         "find_dazzlelinks",
         "scan",
         "rebase",
+        # Record-centric operations (P2) -- delegate OS mechanics to filekit.
+        "export_link",
+        "import_link",
+        "create_link",
+        "recreate_link",
         # Injectable target resolver (P2).
         "resolve_target",
         "ReachabilityResolver",
