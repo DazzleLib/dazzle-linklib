@@ -8,7 +8,7 @@ Everything documented here is importable from the top-level package:
 from dazzle_linklib import (
     DazzleLinkData,
     find_dazzlelinks, scan, rebase,
-    export_link, import_link, create_link, recreate_link,
+    export_link, import_link, create_link, recreate_link, apply_record_metadata,
     resolve_target, ReachabilityResolver, default_reachability,
     DazzleLinkError, DazzleLinkException,
 )
@@ -224,6 +224,18 @@ link = recreate_link("photo.dazzlelink", timestamp_strategy="target", use_live_t
 ```
 
 The timestamp **strategy** (which timestamps to apply) is record-policy and lives here; the actual write onto the symlink (including the Windows reparse-point handling) is `dazzle-filekit`'s.
+
+### `apply_record_metadata(record, link_path, *, timestamp_strategy="current", use_live_target=False)`
+
+Apply a record's timestamp strategy and file attributes (hidden/system/readonly) to an **existing** link — the metadata half of `recreate_link`, exposed for consumers that create the link themselves and compute their own link paths (e.g. a batch importer). Writes onto the link, not the target. Returns `True` if anything was applied, `False` if the strategy/record imply nothing to do.
+
+```python
+from dazzle_linklib import DazzleLinkData, create_link, apply_record_metadata
+
+rec = DazzleLinkData.from_file("photo.dazzlelink")
+link = create_link(rec, "rebuilt/photo.png")             # consumer-chosen path
+apply_record_metadata(rec, link, timestamp_strategy="target", use_live_target=True)
+```
 
 ## Exceptions
 

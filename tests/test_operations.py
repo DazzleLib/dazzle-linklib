@@ -12,6 +12,7 @@ import pytest
 
 from dazzle_linklib import (
     DazzleLinkData,
+    apply_record_metadata,
     create_link,
     export_link,
     import_link,
@@ -156,6 +157,41 @@ def test_recreate_link_restores_windows_attributes(tmp_path, needs_symlinks):
     tgt_attrs = ctypes.windll.kernel32.GetFileAttributesW(str(target))
     assert not (tgt_attrs & 0x2)
     assert target.read_text(encoding="utf-8") == "payload"
+
+
+def test_apply_record_metadata_to_existing_link(tmp_path, needs_symlinks):
+    import sys
+
+    target = tmp_path / "asset.bin"
+    target.write_text("payload", encoding="utf-8")
+    link = tmp_path / "asset.lnk"
+    os.symlink(target, link)
+
+    rec = DazzleLinkData()
+    rec.set_target_path(str(target))
+    rec.set_link_timestamps(modified=1_700_000_000)
+    if sys.platform == "win32":
+        rec.data["link"]["attributes"] = {"hidden": True, "system": False, "readonly": False}
+
+    applied = apply_record_metadata(rec, str(link), timestamp_strategy="symlink")
+    assert applied is True
+    if sys.platform == "win32":
+        import ctypes
+
+        attrs = ctypes.windll.kernel32.GetFileAttributesW(str(link))
+        assert attrs & 0x2  # hidden applied to the link
+
+
+def test_apply_record_metadata_noop_returns_false(tmp_path, needs_symlinks):
+    target = tmp_path / "asset.bin"
+    target.write_text("payload", encoding="utf-8")
+    link = tmp_path / "asset.lnk"
+    os.symlink(target, link)
+
+    rec = DazzleLinkData()
+    rec.set_target_path(str(target))
+    # 'current' strategy + no attributes -> nothing to apply.
+    assert apply_record_metadata(rec, str(link), timestamp_strategy="current") is False
 
 
 def test_recreate_link_update_record_refreshes_target_timestamps(tmp_path, needs_symlinks):

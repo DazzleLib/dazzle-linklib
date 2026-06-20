@@ -11,6 +11,21 @@ release (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.2.1] -- 2026-06-20
+
+### Added
+- `apply_record_metadata(record, link_path, *, timestamp_strategy, use_live_target)`
+  -- apply a record's timestamp strategy + file attributes to an existing link.
+  The metadata half of `recreate_link`, exposed for consumers that create a link
+  themselves and compute their own link paths (e.g. a batch importer).
+
+### Fixed
+- The timestamp adapter handed filekit partial / None-bearing timestamp dicts
+  for records with only `modified` set (created/accessed None), which made
+  filekit abort the whole metadata apply -- dropping both timestamps and file
+  attributes. The adapter now backfills missing created/accessed with `modified`
+  so filekit always receives a complete dict. Affected `recreate_link` too.
+
 ## [0.2.0] -- 2026-06-19
 
 **First functional release.** Extracts the link-record core (stack phase P2)
@@ -76,6 +91,7 @@ injectable target resolver. Verified wire-compatible with the published
 - The `DazzleLinkData` extraction + resolver (stack phase P2) is **not yet
   shipped** -- it lands in a later release (Roadmap, issue #2).
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-linklib/releases/tag/v0.1.0

@@ -31,7 +31,7 @@ disappears or moves.
 | record model (P2) | `DazzleLinkData`, `DazzleLinkError`, `DazzleLinkException` |
 | discovery / rebase (P2) | `find_dazzlelinks`, `scan`, `rebase` |
 | resolver (P2) | `resolve_target`, `ReachabilityResolver`, `default_reachability` |
-| operations (P2) | `export_link`, `import_link`, `create_link`, `recreate_link` |
+| operations (P2) | `export_link`, `import_link`, `create_link`, `recreate_link`, `apply_record_metadata` |
 
 `DazzleLinkData` carries the v1 `.dazzlelink` schema plus the L2 additions: a
 typed locator list (`get_locators`/`add_locator`), an optional `content_id`, and

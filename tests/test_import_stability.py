@@ -30,6 +30,7 @@ LOCKED_SURFACE = {
         "import_link",
         "create_link",
         "recreate_link",
+        "apply_record_metadata",
         # Injectable target resolver (P2).
         "resolve_target",
         "ReachabilityResolver",

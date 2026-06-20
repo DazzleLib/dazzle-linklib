@@ -107,7 +107,18 @@ def _timestamps_for_strategy(record, strategy, use_live_target):
         )
     if not ts or ts.get("modified") is None:
         return None
-    return {k: ts.get(k) for k in ("created", "modified", "accessed")}
+    # filekit needs a complete timestamps dict with real epoch numbers: it
+    # requires all three keys present and cannot interpret a None (a partial or
+    # None-bearing dict aborts the whole metadata apply -- timestamps AND
+    # attributes). Backfill any missing/None created/accessed with modified.
+    modified = ts.get("modified")
+    created = ts.get("created")
+    accessed = ts.get("accessed")
+    return {
+        "created": created if created is not None else modified,
+        "modified": modified,
+        "accessed": accessed if accessed is not None else modified,
+    }
 
 
 def _metadata_for_recreation(record, strategy, use_live_target):
@@ -130,6 +141,34 @@ def _metadata_for_recreation(record, strategy, use_live_target):
             "is_readonly": bool(attrs.get("readonly", False)),
         }
     return metadata
+
+
+def apply_record_metadata(record, link_path, *, timestamp_strategy="current", use_live_target=False):
+    """Apply a record's timestamp strategy + file attributes to an existing link.
+
+    The metadata half of :func:`recreate_link`, exposed for consumers that
+    already hold a record and a link they created themselves (e.g. a batch
+    importer that computes its own link paths). Writes the timestamps the
+    strategy implies and the recorded Windows attributes (hidden/system/
+    readonly) onto ``link_path`` via filekit -- it acts on the link, not the
+    target. A no-op (returns False) when the strategy/record imply nothing.
+
+    Args:
+        record: a :class:`DazzleLinkData`.
+        link_path: an existing link to apply metadata to.
+        timestamp_strategy: ``current`` / ``symlink`` / ``target`` /
+            ``preserve-all`` (see module docstring).
+        use_live_target: for the ``target`` strategy, prefer the live target's
+            timestamps if it exists.
+
+    Returns:
+        bool: True if metadata was applied, False if there was nothing to do.
+    """
+    metadata = _metadata_for_recreation(record, timestamp_strategy, use_live_target)
+    if not metadata:
+        return False
+    fk.apply_file_metadata(link_path, metadata)
+    return True
 
 
 def recreate_link(
@@ -174,9 +213,12 @@ def recreate_link(
 
     create_link(record, link_path, force=force)
 
-    metadata = _metadata_for_recreation(record, timestamp_strategy, use_live_target)
-    if metadata:
-        fk.apply_file_metadata(link_path, metadata)
+    apply_record_metadata(
+        record,
+        link_path,
+        timestamp_strategy=timestamp_strategy,
+        use_live_target=use_live_target,
+    )
 
     if update_record:
         record.update_metadata(reason="symlink_recreation")
@@ -197,4 +239,10 @@ def recreate_link(
     return str(link_path)
 
 
-__all__ = ["export_link", "import_link", "create_link", "recreate_link"]
+__all__ = [
+    "export_link",
+    "import_link",
+    "create_link",
+    "recreate_link",
+    "apply_record_metadata",
+]
