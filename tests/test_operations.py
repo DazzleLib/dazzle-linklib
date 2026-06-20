@@ -130,6 +130,34 @@ def test_recreate_link_target_location_override(tmp_path, needs_symlinks):
     assert os.path.islink(recreated)
 
 
+def test_recreate_link_restores_windows_attributes(tmp_path, needs_symlinks):
+    import sys
+
+    if sys.platform != "win32":
+        pytest.skip("file attributes are a Windows concern")
+    import ctypes
+
+    target = tmp_path / "asset.bin"
+    target.write_text("payload", encoding="utf-8")
+    link = tmp_path / "asset.lnk"
+
+    rec = DazzleLinkData()
+    rec.set_target_path(str(target))
+    rec.set_original_path(str(link))
+    rec.data["link"]["attributes"] = {"hidden": True, "system": False, "readonly": True}
+    dl = tmp_path / "asset.dazzlelink"
+    rec.save_to_file(str(dl))
+
+    recreated = recreate_link(str(dl))
+    attrs = ctypes.windll.kernel32.GetFileAttributesW(recreated)
+    assert attrs & 0x2  # FILE_ATTRIBUTE_HIDDEN
+    assert attrs & 0x1  # FILE_ATTRIBUTE_READONLY
+    # The target itself must be untouched.
+    tgt_attrs = ctypes.windll.kernel32.GetFileAttributesW(str(target))
+    assert not (tgt_attrs & 0x2)
+    assert target.read_text(encoding="utf-8") == "payload"
+
+
 def test_recreate_link_unknown_strategy_raises(tmp_path, needs_symlinks):
     from dazzle_linklib import DazzleLinkError
 

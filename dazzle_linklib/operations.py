@@ -110,6 +110,28 @@ def _timestamps_for_strategy(record, strategy, use_live_target):
     return {k: ts.get(k) for k in ("created", "modified", "accessed")}
 
 
+def _metadata_for_recreation(record, strategy, use_live_target):
+    """Build the filekit metadata dict to apply to a recreated link.
+
+    Combines the timestamp strategy (record-policy) with the record's stored file
+    attributes (hidden/system/readonly). Returns an empty dict if there is
+    nothing to apply. filekit's ``apply_file_metadata`` writes both, and it acts
+    on the link itself -- it does not follow through to the target.
+    """
+    metadata = {}
+    timestamps = _timestamps_for_strategy(record, strategy, use_live_target)
+    if timestamps is not None:
+        metadata["timestamps"] = timestamps
+    attrs = record.to_dict().get("link", {}).get("attributes") or {}
+    if any(attrs.get(k) for k in ("hidden", "system", "readonly")):
+        metadata["windows"] = {
+            "is_hidden": bool(attrs.get("hidden", False)),
+            "is_system": bool(attrs.get("system", False)),
+            "is_readonly": bool(attrs.get("readonly", False)),
+        }
+    return metadata
+
+
 def recreate_link(
     dazzlelink_path,
     *,
@@ -152,9 +174,9 @@ def recreate_link(
 
     create_link(record, link_path, force=force)
 
-    timestamps = _timestamps_for_strategy(record, timestamp_strategy, use_live_target)
-    if timestamps is not None:
-        fk.apply_file_metadata(link_path, {"timestamps": timestamps})
+    metadata = _metadata_for_recreation(record, timestamp_strategy, use_live_target)
+    if metadata:
+        fk.apply_file_metadata(link_path, metadata)
 
     if update_record:
         record.update_metadata(reason="symlink_recreation")

@@ -202,7 +202,7 @@ Create the OS symlink `record` describes (target = `record.get_target_path()`), 
 
 ### `recreate_link(dazzlelink_path, *, target_location=None, timestamp_strategy="current", use_live_target=False, update_record=False, force=True)`
 
-The keystone anti-link-rot operation: load the record, create the symlink, and apply the chosen timestamp strategy — in one call.
+The keystone anti-link-rot operation: load the record, create the symlink, apply the chosen timestamp strategy, and restore the recorded file attributes (hidden/system/readonly) — in one call.
 
 - `target_location` — if given, create the link in this directory under the record's original filename; otherwise at the record's `original_path`.
 - `timestamp_strategy` — one of `current` (leave at creation time), `symlink` (restore the recorded link timestamps), `target` (restore the target's timestamps), or `preserve-all` (alias of `target`).
