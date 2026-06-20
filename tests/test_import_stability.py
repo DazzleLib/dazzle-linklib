@@ -5,9 +5,9 @@ fails, a consumer somewhere breaks: do NOT silently fix the test -- follow
 the api-stability.md process (deprecate with a noisy shim, register it,
 slate removal).
 
-The locked surface is intentionally tiny at the 0.1.0 scaffold stage (version
-exports only). The record model (DazzleLinkData, export/import/scan/rebase,
-resolve_target) joins this canary at its P2 release.
+The record model lands incrementally through P2: ``DazzleLinkData`` and the
+exception types are present now; the discovery/resolver surface
+(export/import/scan/rebase, ``resolve_target``) joins as it ships.
 """
 
 import importlib
@@ -17,6 +17,18 @@ LOCKED_SURFACE = {
         "__version__",
         "__app_name__",
         "PIP_VERSION",
+        # Record model (P2) -- the link record + its stack-rooted exceptions.
+        "DazzleLinkData",
+        "DazzleLinkError",
+        "DazzleLinkException",
+        # Discovery + rebase over record files (P2).
+        "find_dazzlelinks",
+        "scan",
+        "rebase",
+        # Injectable target resolver (P2).
+        "resolve_target",
+        "ReachabilityResolver",
+        "default_reachability",
     ],
 }
 

@@ -17,14 +17,33 @@ mechanics (those delegate down to ``dazzle-filekit`` L1), UNC/drive identity
 traversal tier). "Records that point at each other" live here; "walking and
 interpreting those pointers" do not (see the L2 design DWP, decision D6).
 
-Status: **scaffold (0.1.0, pre-alpha).** The extraction of ``DazzleLinkData``
-and the resolver from the dazzlelink tool is stack phase **P2** -- tracked on
-the roadmap (issue #2). Until then this package exposes only its version.
+Status: **P2 build in progress (0.1.x, pre-alpha).** The record model
+(``DazzleLinkData``), its exceptions, the record discovery/rebase surface
+(``find_dazzlelinks``/``scan``/``rebase``), and the injectable target resolver
+(``resolve_target``) are extracted from the dazzlelink tool. Tracked on the
+roadmap (issue #2).
 
 License: MIT (whole stack; STACK-MAP D11). Architecture contract:
 https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md
 """
 
 from ._version import PIP_VERSION, __app_name__, __version__
+from .discovery import find_dazzlelinks, rebase, scan
+from .exceptions import DazzleLinkError, DazzleLinkException
+from .record import DazzleLinkData
+from .resolver import ReachabilityResolver, default_reachability, resolve_target
 
-__all__ = ["__version__", "__app_name__", "PIP_VERSION"]
+__all__ = [
+    "__version__",
+    "__app_name__",
+    "PIP_VERSION",
+    "DazzleLinkData",
+    "DazzleLinkError",
+    "DazzleLinkException",
+    "find_dazzlelinks",
+    "scan",
+    "rebase",
+    "resolve_target",
+    "ReachabilityResolver",
+    "default_reachability",
+]

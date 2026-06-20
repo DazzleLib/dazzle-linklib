@@ -23,25 +23,28 @@ disappears or moves.
    traversal (`dazzletreelib`). A change that pulls one of those concerns into
    L2 is an architecture change, not a code review comment (STACK-MAP D6).
 
-## Locked surface (0.1.0 scaffold)
+## Locked surface
 
 | Module | Symbols |
 |---|---|
 | `dazzle_linklib` (re-exports) | `__version__`, `__app_name__`, `PIP_VERSION` |
+| record model (P2) | `DazzleLinkData`, `DazzleLinkError`, `DazzleLinkException` |
+| discovery / rebase (P2) | `find_dazzlelinks`, `scan`, `rebase` |
+| resolver (P2) | `resolve_target`, `ReachabilityResolver`, `default_reachability` |
 
-The record model (`DazzleLinkData`, JSON I/O, locator list, `content_id`,
-relations, `resolve_target`) is **not yet part of the locked surface** -- it
-lands in stack phase **P2** and joins this table at its first release. Until
-then the package intentionally exposes only its version.
+`DazzleLinkData` carries the v1 `.dazzlelink` schema plus the L2 additions: a
+typed locator list (`get_locators`/`add_locator`), an optional `content_id`, and
+inter-record `relations`. `scan`/`rebase` operate on record **files** -- they do
+not discover or rewrite live OS symlinks (that is filesystem mechanics owned by
+`dazzle-filekit` L1 and the dazzlelink CLI tool). `resolve_target` walks a
+record's locators and returns the first the injected `ReachabilityResolver`
+judges reachable.
 
-## Planned surface (P2)
+## Planned surface (later P2)
 
 | Symbol | Role |
 |---|---|
-| `DazzleLinkData` | the link record (schema v1 + typed locator list + `content_id` + relations) |
-| `export_link` / `import_link` | JSON serialize / deserialize |
-| `find_dazzlelinks` / `scan` / `rebase` | discovery + path rebasing over records |
-| `resolve_target` (injectable) | identity -> best live locator |
+| `export_link` / `import_link` | JSON serialize / deserialize convenience wrappers |
 
 ## Upstream dependency (dazzle-lib)
 

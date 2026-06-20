@@ -28,7 +28,13 @@ classifiers = [
     "Topic :: System :: Filesystems",
 ]
 
-dependencies = []
+# dazzle-lib (B, bedrock): Serializable / DazzleDataMixin / LinkError / LinkTargetDict.
+# dazzle-filekit (L1) and unctools (L0) join here as the delegation code that
+# imports them lands (timestamp/attr/UNC mechanics) -- declared with the code,
+# not ahead of it (STACK-MAP R3: deps are real, not aspirational).
+dependencies = [
+    "dazzle-lib>=0.1.0",
+]
 
 [project.optional-dependencies]
 dev = [

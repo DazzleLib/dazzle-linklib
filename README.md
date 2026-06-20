@@ -37,11 +37,36 @@ pointers" do not. (See the L2 design rationale, decision D6.)
 
 ## Status
 
-**0.1.0 is a name-reservation placeholder (pre-alpha).** It is published to
-PyPI to claim the name, but exposes only its version -- there is no functional
-content yet. The extraction of `DazzleLinkData` and the resolver from the
-`dazzlelink` tool is stack phase **P2** and lands in a later release -- see the
+**Pre-alpha (0.2.0) -- first functional release.** The link-record core (stack
+phase P2) is extracted from the `dazzlelink` tool: the record model
+(`DazzleLinkData`), record discovery/rebase (`find_dazzlelinks`/`scan`/`rebase`),
+and the injectable target resolver (`resolve_target`). It is verified
+wire-compatible with the published `dazzlelink` 0.8.0 tool in both directions.
+The down-stack delegation of filesystem mechanics to `dazzle-filekit` (L1) and
+`unctools` (L0) follows -- see the
 [Roadmap](https://github.com/DazzleLib/dazzle-linklib/issues/2).
+
+## Usage
+
+```python
+from dazzle_linklib import DazzleLinkData, find_dazzlelinks, resolve_target
+
+# Read a .dazzlelink record (nested JSON, legacy flat, or embedded-script form).
+record = DazzleLinkData.from_file("photo.png.dazzlelink")
+print(record.get_target_path())
+
+# Author a record with typed locators + a content identity (Relinker-ready).
+record = DazzleLinkData()
+record.set_target_path(r"D:\archive\photo.png")
+record.add_locator("ipfs", "QmHash...")
+record.set_content_id("sha256", "deadbeef...")
+record.save_to_file("photo.png.dazzlelink")
+
+# Discover records under a tree and resolve one to its first live locator.
+for path in find_dazzlelinks("backup/", recursive=True):
+    located = resolve_target(DazzleLinkData.from_file(str(path)))
+    print(path, "->", located)
+```
 
 ## Installation
 
