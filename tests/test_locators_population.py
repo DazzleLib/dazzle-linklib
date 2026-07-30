@@ -8,6 +8,8 @@ assessment): AC-B population semantics, AC-C ordering, AC-D base_dir anchoring
 
 import os
 
+import pytest
+
 from dazzle_linklib import (
     DazzleLinkData,
     default_path_variants,
@@ -81,6 +83,7 @@ def test_path_family_maps_kinded_variants_to_legacy_keys(tmp_path):
     assert fam["subst_path"] == r"C:\real\t.txt"
 
 
+@pytest.mark.skipif(os.name != "nt", reason="cross-drive relpath failure is Windows-only")
 def test_path_family_cross_drive_omits_relative(tmp_path):
     t = str(tmp_path / "t.txt")
     fam = path_family(t, base_dir=_other_drive(t) + "\\elsewhere", variants=fake_variants({}))
@@ -127,6 +130,7 @@ def test_populate_overwrites_computed_but_preserves_uncomputed_variants(tmp_path
     assert reps["relative_path"] == "asset.bin"  # recomputed (overwrite)
 
 
+@pytest.mark.skipif(os.name != "nt", reason="cross-drive relpath failure is Windows-only")
 def test_populate_cross_drive_REMOVES_stale_relative(tmp_path):
     # Provable absence: with a known record_dir on another drive, no valid
     # relative exists -- the stale one must be REMOVED (it would outrank
