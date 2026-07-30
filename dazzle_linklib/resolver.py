@@ -50,28 +50,91 @@ def default_reachability() -> ReachabilityResolver:
     return _DEFAULT_REACHABILITY
 
 
-def resolve_target(record, *, reachability=None):
+def _iter_candidates(record, *, variants=None, base_dir=None):
+    """Yield ``(locator, candidate)`` pairs in resolution order.
+
+    The single source of truth for WHAT a resolution tries and in WHAT order --
+    :func:`resolve_target` takes the first reachable hit, and a caller wanting
+    diagnostics ("which forms were tried?") or all-live-candidates semantics
+    (Relinker) walks this generator itself.
+
+    Per locator (in :meth:`~dazzle_linklib.DazzleLinkData.get_locators` priority
+    order): the locator's own value first -- ``relative`` values anchored at
+    ``base_dir`` when given (without ``base_dir`` a relative candidate is
+    yielded as-is and is CWD-dependent; pass the record file's directory) --
+    then each derivation from the kinded ``variants`` source. Candidates are
+    deduplicated case-insensitively across the whole walk.
+
+    Args:
+        record: anything exposing ``get_locators() -> [{'kind', 'value'}]``.
+        variants: kinded variant source ``path -> [(kind, value)]`` applied to
+            each anchored candidate (live re-resolution on THIS machine's
+            mappings). ``None`` -> no expansion (the stored-locator walk only).
+        base_dir: anchor directory for ``relative`` locators.
+    """
+    seen = set()
+
+    def _fresh(value):
+        key = os.path.normcase(str(value))
+        if key in seen:
+            return False
+        seen.add(key)
+        return True
+
+    for locator in record.get_locators():
+        value = locator.get("value")
+        if not value:
+            continue
+        if locator.get("kind") == "relative" and base_dir is not None:
+            candidate = os.path.normpath(os.path.join(str(base_dir), value))
+        else:
+            candidate = value
+        if _fresh(candidate):
+            yield locator, candidate
+        if variants is not None:
+            try:
+                derived = list(variants(str(candidate)))
+            except Exception:
+                derived = []
+            for _kind, derived_value in derived:
+                if derived_value and _fresh(derived_value):
+                    yield locator, str(derived_value)
+
+
+def resolve_target(record, *, reachability=None, variants=None, base_dir=None):
     """Return the first reachable locator for ``record``, or ``None``.
 
-    The candidate order is the record's own locator order
-    (:meth:`DazzleLinkData.get_locators` -- path aliases first, original ahead of
-    derived, then explicit locators), so the most authoritative locator wins.
+    Walks the record's locators in priority order (see
+    :meth:`~dazzle_linklib.DazzleLinkData.get_locators`), anchoring ``relative``
+    locators at ``base_dir`` and -- when a ``variants`` source is given --
+    re-deriving each candidate's alternative names on the EXECUTING machine's
+    current mappings (live re-resolution: a dead drive letter stored on machine
+    A can still resolve via the UNC form machine B maps today).
 
     Args:
         record: A :class:`~dazzle_linklib.DazzleLinkData` (anything exposing
             ``get_locators() -> [{'kind', 'value'}]``).
         reachability: A :class:`ReachabilityResolver` to judge each candidate.
             Defaults to filesystem existence. Injected, never mutating I/O.
+            Identity verification composes here: wrap the checker so
+            ``is_reachable = exists AND digest matches`` and a failing
+            candidate simply lets the walk continue (see docs/api.md).
+        variants: kinded variant source ``path -> [(kind, value)]`` for live
+            re-resolution; ``None`` (default) walks stored locators only.
+            Pass :func:`~dazzle_linklib.default_path_variants` for the
+            unctools-backed default.
+        base_dir: directory the record file lives in; anchors ``relative``
+            locators. Without it, relative candidates are CWD-dependent.
 
     Returns:
-        dict | None: the first ``{'kind', 'value'}`` locator judged reachable,
-        or ``None`` if none are.
+        dict | None: ``{'kind', 'value'}`` for the first reachable candidate --
+        ``value`` may be a machine-derived variant of the stored locator, not
+        the stored string itself -- or ``None`` if nothing is reachable.
     """
     checker = reachability if reachability is not None else default_reachability()
-    for locator in record.get_locators():
-        value = locator.get("value")
-        if value and checker.is_reachable(value):
-            return locator
+    for locator, candidate in _iter_candidates(record, variants=variants, base_dir=base_dir):
+        if checker.is_reachable(candidate):
+            return {"kind": locator.get("kind"), "value": candidate}
     return None
 
 

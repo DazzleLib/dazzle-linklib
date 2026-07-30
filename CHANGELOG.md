@@ -11,6 +11,56 @@ release (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.3.0] -- 2026-07-30
+
+**The portable-paths release** (dazzlelink#13/#24 train). Records now carry --
+and can re-derive -- the path forms that survive machine changes: relative
+(synced trees), UNC/drive (network bases), and subst expansions.
+
+### Added
+- `populate_locators(record, *, record_dir=None, variants=None)` -- the
+  create-side portability operation: computes and stores the target's path
+  family (`relative_path` anchored at the record's directory + `unc_path` /
+  `drive_path` / `subst_path` from the kinded variant source) in
+  `target_representations`. Three-way refresh: computed values overwrite;
+  provable absence removes (relative only -- cross-drive with a known anchor);
+  couldn't-compute preserves (a missing mapping HERE never invalidates a
+  variant stored by the creating machine). Never raises.
+- `path_family(path, *, base_dir=None, variants=None)` -- one path's
+  representation family as a legacy-keyed dict; `base_dir=None` omits the
+  relative key (the historical link-side shape). The building block the
+  dazzlelink tool uses for both target and link representations.
+- `default_path_variants` -- the kinded variant source (unctools
+  `path_variants`): `[(kind, value)]` where kind is the mechanism-of-derivation
+  (unc/drive/subst), not the form of the value. Injectable everywhere it is
+  consumed.
+- `resolve_target(..., variants=None, base_dir=None)` -- **live re-resolution**
+  and correct relative anchoring: `base_dir` anchors `relative` locators at the
+  record file's directory (previously CWD-accidental); a `variants` source
+  re-derives each candidate against the EXECUTING machine's current mappings,
+  so a dead stored form resolves via the form this machine maps today. The
+  walk is a generator (`resolver._iter_candidates`) -- the diagnostic source
+  for "what was tried" and the future all-live-candidates surface. The winner's
+  `value` may be machine-derived. Default (`variants=None`) keeps the stored-
+  locator-only walk.
+- `export_link(populate=..., variants=...)` -- opt-in population at export
+  (default False: population enumerates drive mappings; bulk exporters opt in
+  deliberately).
+- api.md documents the identity-verification pattern (a `ReachabilityResolver`
+  decorator: exists AND digest matches -- the walk continues past a failed
+  candidate naturally).
+
+### Changed
+- `get_locators()` now orders the path family by the documented
+  resolution-priority heuristic `path -> relative -> unc -> drive -> subst ->
+  other legacy aliases -> explicit locators` (previously dict insertion order,
+  which put `relative` last). Inner-family order was never a documented
+  contract; the new order matches the dazzlelink tool's shipped fallback
+  behavior (absolute -> relative -> representations). `subst_path` joins the
+  legacy kind mapping.
+- New hard dependency `unctools>=0.3.0` (the kinded `path_variants` + one-shot
+  subst enumeration) -- the L0 delegation this library's pyproject anticipated.
+
 ## [0.2.2] -- 2026-06-20
 
 ### Fixed
@@ -101,7 +151,8 @@ injectable target resolver. Verified wire-compatible with the published
 - The `DazzleLinkData` extraction + resolver (stack phase P2) is **not yet
   shipped** -- it lands in a later release (Roadmap, issue #2).
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.1.0...v0.2.0

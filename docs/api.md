@@ -9,6 +9,7 @@ from dazzle_linklib import (
     DazzleLinkData,
     find_dazzlelinks, scan, rebase,
     export_link, import_link, create_link, recreate_link, apply_record_metadata,
+    path_family, populate_locators, default_path_variants,
     resolve_target, ReachabilityResolver, default_reachability,
     DazzleLinkError, DazzleLinkException,
 )
@@ -56,8 +57,10 @@ The locator list generalizes the legacy `target_representations` path-alias dict
 
 | Method | Returns / effect |
 |---|---|
-| `get_locators()` | `list[{"kind", "value"}]` — the stored `target_path` first (always seeded), then legacy `target_representations` aliases mapped to kinds, then explicit `add_locator` entries; duplicates collapsed |
+| `get_locators()` | `list[{"kind", "value"}]` — the stored `target_path`, legacy `target_representations` aliases (typed), and explicit `add_locator` entries; duplicates collapsed. Ordered by the documented **resolution-priority heuristic**: `path → relative → unc → drive → subst → other legacy aliases (alphabetical) → explicit locators` (relative survives relocation; unc/drive are creation-time machine facts; subst values are source-machine-local expansions) |
 | `add_locator(kind, value)` | append a typed locator, e.g. `add_locator("ipfs", "Qm...")` |
+
+At rest, the **path family** lives in `target_representations` (`original_path` / `relative_path` / `unc_path` / `drive_path` / `subst_path` — additive keys under policy 2); `link.locators` at rest is reserved for non-path kinds (url/ipfs/…). There is deliberately no at-rest mirror of the path family into `link.locators` — `get_locators()` types the legacy keys losslessly at read time, and a mirror would desync on the first `rebase`.
 
 ### Content identity and relations (L2)
 
@@ -143,15 +146,39 @@ print(len(report["changed"]), "rebased,", len(report["skipped"]), "skipped")
 
 ---
 
+## Locator population (the portable-paths create side)
+
+### `populate_locators(record, *, record_dir=None, variants=None)`
+
+Compute and store the target's portable path family in `target_representations`: `relative_path` (anchored at `record_dir`, the record file's directory), plus `unc_path` / `drive_path` / `subst_path` from the kinded variant source. Three-way refresh rule: a **computed** value overwrites its key; **provable absence** removes it (only `relative_path` — a cross-drive `ValueError` with a known `record_dir` proves no relative exists, and a stale relative would outrank working forms); **couldn't compute** preserves what's stored (a missing mapping on THIS machine never invalidates a variant stored by the creating machine). `original_path` is seeded only if absent; unknown keys are never touched. Never raises. Returns the updated dict.
+
+### `path_family(path, *, base_dir=None, variants=None)`
+
+The representation family for one path as a legacy-keyed dict — always `original_path`; `relative_path` only when `base_dir` is given (its omission reproduces the historical link-side `path_representations` shape); `{kind}_path` for each derivation from the variant source. This is the building block `populate_locators` uses for the target and the dazzlelink tool uses for the link's own path.
+
+### `default_path_variants(path)`
+
+The default kinded variant source: unctools' `path_variants` — `[(kind, value)]` derivations where **kind is the mechanism-of-derivation, not the form-of-value** (`("subst", value)` means "derived by expanding a subst alias"; the value itself is a plain local path). The input is never included. `[]` on non-Windows or failure; never raises. Inject your own `path -> [(kind, value)]` callable for tests or richer sources (Relinker).
+
 ## Target resolution
 
-### `resolve_target(record, *, reachability=None)`
+### `resolve_target(record, *, reachability=None, variants=None, base_dir=None)`
 
-Return the first reachable locator for `record`, or `None`. The candidate order is the record's own locator order (`get_locators()` — the stored `target_path` first, then aliases, then explicit locators), so the most authoritative locator wins.
+Return the first reachable candidate for `record`, or `None`. The walk order is `get_locators()`' priority order; for each locator: its own value first (`relative` values anchored at `base_dir` — pass the record file's directory, or relative candidates are CWD-dependent), then each derivation from the kinded `variants` source. Passing `variants` (e.g. `default_path_variants`) enables **live re-resolution**: candidates are re-derived against the *executing* machine's current drive/UNC/subst mappings, so a dead stored form can still resolve via the form this machine maps today. `variants=None` (default) walks stored locators only — the pre-0.3.0 behavior.
 
-`record` is a `DazzleLinkData` (or anything exposing `get_locators() -> [{"kind", "value"}]`). `reachability` is a `ReachabilityResolver` that judges each candidate; it defaults to filesystem existence. Returns the chosen `{"kind", "value"}` dict, or `None` if none are reachable.
+Returns `{"kind", "value"}` where `value` **may be a machine-derived variant**, not the stored string. `reachability` defaults to filesystem existence.
 
-The library owns the candidate-walk *strategy*; the injected checker only judges a single locator. The checker is consulted in order and `resolve_target` stops at the first reachable one — it never mutates I/O.
+**Identity verification pattern:** reachability is existence, not identity — a candidate can exist and be the wrong file. When a record carries a `content_id`, compose verification as a `ReachabilityResolver` decorator: `is_reachable = exists AND digest matches`. A candidate failing verification is simply "not reachable" and the walk continues to the next candidate — no extra API needed:
+
+```python
+class VerifiedReachability:
+    def __init__(self, inner, expected_digest, hasher):
+        self.inner, self.expected, self.hasher = inner, expected_digest, hasher
+    def is_reachable(self, value):
+        return self.inner.is_reachable(value) and self.hasher(value) == self.expected
+```
+
+The library owns the candidate-walk *strategy*; the injected checker only judges a single candidate. Diagnostics ("what was tried, in what order") come from walking the same generator the resolver uses (`dazzle_linklib.resolver._iter_candidates`) — the dazzlelink tool uses this for its failure output.
 
 ### `ReachabilityResolver`
 

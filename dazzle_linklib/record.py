@@ -31,7 +31,12 @@ _LEGACY_REP_KIND = {
     "relative_path": "relative",
     "unc_path": "unc",
     "drive_path": "drive",
+    "subst_path": "subst",
 }
+
+# Resolution-priority for the path family (see get_locators docstring).
+_KIND_PRIORITY = {"path": 0, "relative": 1, "unc": 2, "drive": 3, "subst": 4}
+_KIND_PRIORITY_OTHER = 5  # other legacy aliases, alphabetical within
 
 _DATA_MARKER = "# DAZZLELINK_DATA_BEGIN"
 
@@ -150,10 +155,19 @@ class DazzleLinkData(DazzleDataMixin):
     def get_locators(self):
         """All target locators as a typed ``[{kind, value}]`` list.
 
-        Merges the legacy ``target_representations`` path-alias dict (mapped to
-        kinds path/relative/unc/drive/...) with any explicit ``link.locators``
-        entries (url/ipfs/torrent/...). Order: legacy aliases first, then
-        explicit locators; duplicates (same kind+value) are collapsed.
+        Merges the stored ``target_path``, the legacy ``target_representations``
+        path-alias dict (mapped to kinds path/relative/unc/drive/subst/...), and
+        any explicit ``link.locators`` entries (url/ipfs/torrent/...).
+        Duplicates (same kind+value) are collapsed.
+
+        Order is a documented **resolution-priority heuristic**, not insertion
+        order: ``path -> relative -> unc -> drive -> subst -> other legacy
+        aliases (alphabetical) -> explicit locators (insertion order)``.
+        Rationale: the relative form is the only one designed to survive
+        relocation (its failure window -- a torn sync -- is transient), while
+        unc/drive are machine-time facts from creation (their failure mode -- a
+        stale mounted share -- is persistent); subst values are source-machine-
+        local expansions, the least portable of the family.
         """
         seen = set()
         locators = []
@@ -165,6 +179,7 @@ class DazzleLinkData(DazzleDataMixin):
             pair = ("path", target_path)
             seen.add(pair)
             locators.append({"kind": "path", "value": target_path})
+        legacy = []
         for key, value in self.get_target_representations().items():
             if not value:
                 continue
@@ -172,7 +187,14 @@ class DazzleLinkData(DazzleDataMixin):
             pair = (kind, value)
             if pair not in seen:
                 seen.add(pair)
-                locators.append({"kind": kind, "value": value})
+                legacy.append({"kind": kind, "value": value})
+        legacy.sort(
+            key=lambda loc: (
+                _KIND_PRIORITY.get(loc["kind"], _KIND_PRIORITY_OTHER),
+                loc["kind"],
+            )
+        )
+        locators.extend(legacy)
         for loc in self.data.get("link", {}).get("locators", []):
             pair = (loc.get("kind"), loc.get("value"))
             if pair not in seen:

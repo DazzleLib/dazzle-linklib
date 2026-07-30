@@ -31,6 +31,10 @@ LOCKED_SURFACE = {
         "create_link",
         "recreate_link",
         "apply_record_metadata",
+        # Portable path family (0.3.0) -- population + the kinded variant source.
+        "path_family",
+        "populate_locators",
+        "default_path_variants",
         # Injectable target resolver (P2).
         "resolve_target",
         "ReachabilityResolver",

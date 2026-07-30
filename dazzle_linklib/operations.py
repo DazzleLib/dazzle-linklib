@@ -25,15 +25,29 @@ from .record import DazzleLinkData
 _STRATEGIES = ("current", "symlink", "target", "preserve-all", "preserve")
 
 
-def export_link(record, file_path, make_executable=False):
+def export_link(record, file_path, make_executable=False, *, populate=False, variants=None):
     """Write ``record`` to ``file_path`` as a ``.dazzlelink`` file.
 
     A module-level convenience over :meth:`DazzleLinkData.save_to_file` (for
     consumers -- e.g. preserve -- that prefer functions over methods).
 
+    Args:
+        populate: when True, first populate the record's portable path family
+            (:func:`~dazzle_linklib.populate_locators`, anchored at
+            ``file_path``'s directory) so the written record can re-resolve on
+            other machines. Default False -- population enumerates this
+            machine's drive mappings (a subprocess on Windows), which stays
+            opt-in for bulk exporters.
+        variants: kinded variant source forwarded to population.
+
     Returns:
         bool: True on success.
     """
+    if populate:
+        from .locators import populate_locators
+
+        record_dir = os.path.dirname(os.path.abspath(str(file_path)))
+        populate_locators(record, record_dir=record_dir, variants=variants)
     return record.save_to_file(file_path, make_executable=make_executable)
 
 

@@ -38,6 +38,10 @@ dependencies = [
     # >=0.3.1: 0.3.0 corrupted a symlink TARGET's timestamps when applying a
     # record's timestamps to the link; the operations rely on the 0.3.1 fix.
     "dazzle-filekit>=0.3.1",
+    # unctools (L0): kinded path_variants + subst enumeration -- the variant
+    # source behind populate_locators / live re-resolution (the anticipated
+    # UNC-identity delegation, now landed).
+    "unctools>=0.3.0",
 ]
 
 [project.optional-dependencies]
