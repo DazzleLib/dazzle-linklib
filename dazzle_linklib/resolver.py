@@ -14,6 +14,7 @@ no base class and no stack import.
 
 import logging
 import os
+import re
 from typing import Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
@@ -44,13 +45,68 @@ class FilesystemReachability:
 
 _DEFAULT_REACHABILITY = FilesystemReachability()
 
+# A value whose FORM is scheme-addressed (url/ipfs/magnet/... -- anything a
+# shell-open handler dispatches on). Two-plus chars before :// so a Windows
+# drive letter ("C:\x") can never match; UNC forms ("\\srv\share") have no
+# scheme and fall through to the filesystem check.
+_SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.\-]*://")
+
+
+class SchemeAwareReachability:
+    """Reachability for records that mix path and scheme-addressed locators.
+
+    Scheme-form values (``https://...``, ``ipfs://...``) are **assumed
+    reachable** -- no network I/O, offline-correct, and exactly the "natural
+    last resort" posture: whether the scheme actually opens is the OS
+    handler's business at open time. Everything else is judged by filesystem
+    existence. Openability is form-determined here; a locator's *kind* remains
+    population-side provenance (the kind/form doctrine, S8) -- this checker
+    never sees kinds.
+
+    Compose verification on top per the decorator pattern in docs/api.md
+    (exists AND digest matches) when a record carries a ``content_id``.
+    """
+
+    def is_reachable(self, value: str) -> bool:
+        try:
+            if not value:
+                return False
+            if _SCHEME_RE.match(str(value)):
+                return True
+            return os.path.exists(value)
+        except (OSError, ValueError, TypeError):
+            return False
+
 
 def default_reachability() -> ReachabilityResolver:
     """The module-default reachability checker (filesystem existence)."""
     return _DEFAULT_REACHABILITY
 
 
-def _iter_candidates(record, *, variants=None, base_dir=None):
+def _select_locators(record, *, prefer=None, only=None, kinds=None):
+    """The selector stage: filter/order a record's locators (locality axis).
+
+    Applied kinds-filter -> reach-filter -> preference-ordering; each step is a
+    no-op when its argument is None, so defaults preserve the plain
+    get_locators() order exactly.
+    """
+    locators = record.get_locators()
+    if kinds is not None:
+        wanted = set(kinds)
+        locators = [loc for loc in locators if loc.get("kind") in wanted]
+    if only is not None:
+        from .locality import filter_by_reach
+
+        locators = filter_by_reach(locators, only)
+    if prefer is not None:
+        from .locality import order_by_preference
+
+        locators = order_by_preference(locators, prefer)
+    return locators
+
+
+def _iter_candidates(record, *, variants=None, base_dir=None,
+                     prefer=None, only=None, kinds=None):
     """Yield ``(locator, candidate)`` pairs in resolution order.
 
     The single source of truth for WHAT a resolution tries and in WHAT order --
@@ -65,12 +121,20 @@ def _iter_candidates(record, *, variants=None, base_dir=None):
     then each derivation from the kinded ``variants`` source. Candidates are
     deduplicated case-insensitively across the whole walk.
 
+    Selection (the locality axis, see :mod:`dazzle_linklib.locality`):
+    ``kinds`` filters to exact locator kinds; ``only`` filters to a locality
+    rung or reach alias; ``prefer`` reorders by rank-distance from a rung or
+    reach alias (preference, not filter -- everything else remains fallback).
+
     Args:
         record: anything exposing ``get_locators() -> [{'kind', 'value'}]``.
         variants: kinded variant source ``path -> [(kind, value)]`` applied to
             each anchored candidate (live re-resolution on THIS machine's
             mappings). ``None`` -> no expansion (the stored-locator walk only).
         base_dir: anchor directory for ``relative`` locators.
+        prefer: locality rung or reach alias to order candidates toward.
+        only: locality rung or reach alias to restrict candidates to.
+        kinds: iterable of locator kinds to restrict candidates to.
     """
     seen = set()
 
@@ -81,7 +145,7 @@ def _iter_candidates(record, *, variants=None, base_dir=None):
         seen.add(key)
         return True
 
-    for locator in record.get_locators():
+    for locator in _select_locators(record, prefer=prefer, only=only, kinds=kinds):
         value = locator.get("value")
         if not value:
             continue
@@ -101,7 +165,8 @@ def _iter_candidates(record, *, variants=None, base_dir=None):
                     yield locator, str(derived_value)
 
 
-def resolve_target(record, *, reachability=None, variants=None, base_dir=None):
+def resolve_target(record, *, reachability=None, variants=None, base_dir=None,
+                   prefer=None, only=None, kinds=None):
     """Return the first reachable locator for ``record``, or ``None``.
 
     Walks the record's locators in priority order (see
@@ -125,6 +190,13 @@ def resolve_target(record, *, reachability=None, variants=None, base_dir=None):
             unctools-backed default.
         base_dir: directory the record file lives in; anchors ``relative``
             locators. Without it, relative candidates are CWD-dependent.
+        prefer: locality rung or reach alias (see
+            :mod:`dazzle_linklib.locality`) -- reorders candidates by
+            rank-distance toward it. A PREFERENCE: everything else remains
+            as fallback.
+        only: locality rung or reach alias -- restricts candidates to that
+            rung/reach (a filter; no matches -> ``None``).
+        kinds: iterable of locator kinds to restrict candidates to.
 
     Returns:
         dict | None: ``{'kind', 'value'}`` for the first reachable candidate --
@@ -132,7 +204,10 @@ def resolve_target(record, *, reachability=None, variants=None, base_dir=None):
         the stored string itself -- or ``None`` if nothing is reachable.
     """
     checker = reachability if reachability is not None else default_reachability()
-    for locator, candidate in _iter_candidates(record, variants=variants, base_dir=base_dir):
+    for locator, candidate in _iter_candidates(
+        record, variants=variants, base_dir=base_dir,
+        prefer=prefer, only=only, kinds=kinds,
+    ):
         if checker.is_reachable(candidate):
             return {"kind": locator.get("kind"), "value": candidate}
     return None
@@ -141,6 +216,7 @@ def resolve_target(record, *, reachability=None, variants=None, base_dir=None):
 __all__ = [
     "ReachabilityResolver",
     "FilesystemReachability",
+    "SchemeAwareReachability",
     "default_reachability",
     "resolve_target",
 ]

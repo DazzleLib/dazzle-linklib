@@ -34,7 +34,9 @@ classifiers = [
 # call one L2 operation instead of gluing record-pieces + filekit themselves.
 # unctools (L0) joins when the UNC-identity delegation code lands.
 dependencies = [
-    "dazzle-lib>=0.1.0",
+    # >=0.8.2: Continuum(subtype=)/ContinuumSpace.compose -- the locality axis
+    # (locality.py) is the stack's first Continuum consumer outside dazzlecmd.
+    "dazzle-lib>=0.8.2",
     # >=0.3.1: 0.3.0 corrupted a symlink TARGET's timestamps when applying a
     # record's timestamps to the link; the operations rely on the 0.3.1 fix.
     "dazzle-filekit>=0.3.1",

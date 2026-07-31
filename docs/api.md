@@ -160,9 +160,29 @@ The representation family for one path as a legacy-keyed dict — always `origin
 
 The default kinded variant source: unctools' `path_variants` — `[(kind, value)]` derivations where **kind is the mechanism-of-derivation, not the form-of-value** (`("subst", value)` means "derived by expanding a subst alias"; the value itself is a plain local path). The input is never included. `[]` on non-Windows or failure; never raises. Inject your own `path -> [(kind, value)]` callable for tests or richer sources (Relinker).
 
+## The locality axis (selection by rung)
+
+Where a copy LIVES, as a real `dazzle_lib.Continuum` — `LOCALITY_CONTINUUM`, warm/+ = local possession (`memory 4, file 3, link 2, removable 1`), the rank-0 seat = the machine boundary (`machine`), cold/− = increasingly remote (`unc −1, ssh −2, ftp −3, internet −4`). `LOCALITY_SPACE` is a single-axis `ContinuumSpace.compose` — the hook where Relinker's fidelity axes will intersect. Vocabulary: **rung** (a named position), **reach** (a region: `local` / `local-network` / `remote`, aliases resolved by `resolve_rung`).
+
+| Symbol | Role |
+|---|---|
+| `locator_rung(kind)` | kind → rung (`drive → unc` — a mapped letter IS the share; unknown kinds → `None`, never guessed). Kind stays mechanism-of-derivation; rung is *where the value lives* |
+| `reach_of(rung)` | rung → `local` / `boundary` / `local-network` / `remote` |
+| `resolve_rung(name)` | rung or reach alias → rung; `DazzleLinkError` naming valid choices |
+| `order_by_preference(locators, prefer)` | stable sort by rank-distance from the preferred rung/reach; unknown-rung locators last |
+| `filter_by_reach(locators, only)` | reach alias = whole region; rung name = exact |
+
 ## Target resolution
 
-### `resolve_target(record, *, reachability=None, variants=None, base_dir=None)`
+### `resolve_target(record, *, reachability=None, variants=None, base_dir=None, prefer=None, only=None, kinds=None)`
+
+Selection parameters (0.4.0): `kinds` filters to exact locator kinds; `only` filters to a locality rung/reach; `prefer` **reorders** candidates by rank-distance from a rung/reach — a preference, not a filter: everything else remains as fallback (`--prefer remote` opens the URL even while the local file exists; the local forms still back it up). Defaults keep pre-0.4.0 behavior exactly.
+
+### `SchemeAwareReachability`
+
+The checker for records mixing path and scheme-addressed locators: scheme-form values (`https://…`, `ipfs://…` — two-plus-char scheme before `://`, so drive letters never match) are **assumed reachable** with zero network I/O; everything else is judged by `os.path.exists`. Openability is form-determined; a locator's *kind* remains population-side provenance. Compose content-id verification on top via the decorator pattern below.
+
+### `resolve_target` (pre-0.4.0 core semantics)
 
 Return the first reachable candidate for `record`, or `None`. The walk order is `get_locators()`' priority order; for each locator: its own value first (`relative` values anchored at `base_dir` — pass the record file's directory, or relative candidates are CWD-dependent), then each derivation from the kinded `variants` source. Passing `variants` (e.g. `default_path_variants`) enables **live re-resolution**: candidates are re-derived against the *executing* machine's current drive/UNC/subst mappings, so a dead stored form can still resolve via the form this machine maps today. `variants=None` (default) walks stored locators only — the pre-0.3.0 behavior.
 

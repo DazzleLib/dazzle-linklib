@@ -39,6 +39,16 @@ LOCKED_SURFACE = {
         "resolve_target",
         "ReachabilityResolver",
         "default_reachability",
+        # Locality axis + selection (0.4.0, #25) -- rungs, reaches, preference.
+        "LOCALITY_CONTINUUM",
+        "LOCALITY_SPACE",
+        "REACH_ALIASES",
+        "locator_rung",
+        "reach_of",
+        "resolve_rung",
+        "order_by_preference",
+        "filter_by_reach",
+        "SchemeAwareReachability",
     ],
 }
 

@@ -30,6 +30,16 @@ https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md
 from ._version import PIP_VERSION, __app_name__, __version__
 from .discovery import find_dazzlelinks, rebase, scan
 from .exceptions import DazzleLinkError, DazzleLinkException
+from .locality import (
+    LOCALITY_CONTINUUM,
+    LOCALITY_SPACE,
+    REACH_ALIASES,
+    filter_by_reach,
+    locator_rung,
+    order_by_preference,
+    reach_of,
+    resolve_rung,
+)
 from .locators import default_path_variants, path_family, populate_locators
 from .operations import (
     apply_record_metadata,
@@ -39,7 +49,12 @@ from .operations import (
     recreate_link,
 )
 from .record import DazzleLinkData
-from .resolver import ReachabilityResolver, default_reachability, resolve_target
+from .resolver import (
+    ReachabilityResolver,
+    SchemeAwareReachability,
+    default_reachability,
+    resolve_target,
+)
 
 __all__ = [
     "__version__",
@@ -59,7 +74,16 @@ __all__ = [
     "path_family",
     "populate_locators",
     "default_path_variants",
+    "LOCALITY_CONTINUUM",
+    "LOCALITY_SPACE",
+    "REACH_ALIASES",
+    "locator_rung",
+    "reach_of",
+    "resolve_rung",
+    "order_by_preference",
+    "filter_by_reach",
     "resolve_target",
     "ReachabilityResolver",
+    "SchemeAwareReachability",
     "default_reachability",
 ]

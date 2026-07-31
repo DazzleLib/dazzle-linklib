@@ -11,6 +11,41 @@ release (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.4.0] -- 2026-07-30
+
+**The locality-selection release** (dazzlelink#25 train): a record's locators
+now sit on a real locality axis, and resolution takes a rung on it -- CHOICE
+(preference), not just fallback.
+
+### Added
+- `locality` module: `LOCALITY_CONTINUUM` -- the locality ladder as a
+  `dazzle_lib.Continuum` (warm/+ = local possession: memory/file/link/
+  removable; the rank-0 seat is the machine boundary; cold/- = unc/ssh/ftp/
+  internet; `subtype="full"`). `LOCALITY_SPACE` (single-axis
+  `ContinuumSpace.compose`) is the hook future fidelity axes intersect
+  (the Relinker degrees-of-removal model). Helpers: `locator_rung` (kind ->
+  rung; kind stays mechanism-of-derivation, rung is WHERE the value lives --
+  a `drive` letter shares the `unc` rung; unknown kinds have no rung, never
+  guessed), `reach_of`, `resolve_rung` (rung or reach alias `local` /
+  `local-network` / `remote`), `order_by_preference` (stable rank-distance
+  sort), `filter_by_reach`.
+- `resolve_target(..., prefer=, only=, kinds=)` -- selection on the walk:
+  `kinds` filters exact kinds, `only` filters to a rung/reach, `prefer`
+  REORDERS by rank-distance from a rung/reach (everything else remains
+  fallback). Defaults preserve 0.3.0 behavior exactly. `_iter_candidates`
+  carries the same parameters (diagnostics see what resolution sees).
+- `SchemeAwareReachability` -- reachability for records mixing path and
+  scheme-addressed locators: scheme-form values (`https://...`, `ipfs://...`)
+  are assumed reachable (no network I/O, offline-correct -- whether a scheme
+  opens is the OS handler's business at open time); everything else is judged
+  by filesystem existence. Openability is form-determined; a locator's kind
+  remains population-side provenance.
+
+### Changed
+- `dazzle-lib` floor raised to `>=0.8.2` (`Continuum(subtype=)` /
+  `ContinuumSpace.compose`) -- this library is the stack's first Continuum
+  consumer outside dazzlecmd/loglib.
+
 ## [0.3.0] -- 2026-07-30
 
 **The portable-paths release** (dazzlelink#13/#24 train). Records now carry --
@@ -151,7 +186,8 @@ injectable target resolver. Verified wire-compatible with the published
 - The `DazzleLinkData` extraction + resolver (stack phase P2) is **not yet
   shipped** -- it lands in a later release (Roadmap, issue #2).
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.0...v0.2.1
