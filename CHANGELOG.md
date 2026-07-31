@@ -11,6 +11,44 @@ release (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.5.0] -- 2026-07-30
+
+**The monopole reshape** (dazzlelink#25 train, DWP Amendment 4 -- hours after
+0.4.0, before any external consumer): the locality ladder is rebuilt on the
+house monopole pattern and the selector vocabulary becomes open-ended.
+
+### Changed
+- `LOCALITY_CONTINUUM` is now a **monopole**: `local 0` (the rest seat -- the
+  default the resolver assumes with no selection), `intranet -1`,
+  `internet -2`. Removal distance = `abs(rank)`; the machine boundary is the
+  `local -> intranet` EDGE (the direct-file-API capability cliff), not a
+  seat. Replaces 0.4.0's nine-rung full-subtype ladder: protocol-named seats
+  (`ssh -2`, `ftp -3`) forced ordering claims no producer could defend, and
+  the naming mixed three families (path-form, protocol, region). Every
+  remaining seat is exercised by a real producer. Trimmed seats
+  (memory/link/removable warm-side; ssh/ftp cold-side) are ledgered with
+  reopen triggers -- rungs are insertable later without breaking anything
+  (locality is derived, never stored).
+- Kind -> rung map is documented as a **producer-grounded heuristic** (kind
+  and locality are orthogonal axes -- a protocol does not determine a place):
+  path/relative/subst -> `local`; unc/drive -> `intranet`;
+  url/http/https/ipfs/torrent/magnet/arweave -> `internet`; **ssh/sftp/ftp ->
+  no rung** (no producer vouches for their locality: excluded from rung
+  filters, ordered last, selectable by name).
+- `resolve_rung` error text now names the full rung/alias vocabulary
+  (rungs, reach aliases, scheme aliases).
+
+### Added
+- `SCHEME_ALIASES` -- `http` / `https` / `url` resolve to the `internet` rung
+  (tier semantics: "the web copy"); `--prefer http` now works.
+- **Registry-free kind fallthrough** in `order_by_preference` /
+  `filter_by_reach`: any spelling that is not a rung/reach/scheme alias
+  selects locators of exactly that kind (`prefer="ftp"` puts ftp locators
+  first; `only="gopher"` filters to gopher locators) -- open-ended by design,
+  including protocols nobody has invented yet. The RECORD is the validator: a
+  spelling matching nothing yields no candidates rather than a vocabulary
+  error.
+
 ## [0.4.0] -- 2026-07-30
 
 **The locality-selection release** (dazzlelink#25 train): a record's locators
@@ -186,7 +224,8 @@ injectable target resolver. Verified wire-compatible with the published
 - The `DazzleLinkData` extraction + resolver (stack phase P2) is **not yet
   shipped** -- it lands in a later release (Roadmap, issue #2).
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.1...v0.2.2

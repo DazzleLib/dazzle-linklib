@@ -162,15 +162,17 @@ The default kinded variant source: unctools' `path_variants` — `[(kind, value)
 
 ## The locality axis (selection by rung)
 
-Where a copy LIVES, as a real `dazzle_lib.Continuum` — `LOCALITY_CONTINUUM`, warm/+ = local possession (`memory 4, file 3, link 2, removable 1`), the rank-0 seat = the machine boundary (`machine`), cold/− = increasingly remote (`unc −1, ssh −2, ftp −3, internet −4`). `LOCALITY_SPACE` is a single-axis `ContinuumSpace.compose` — the hook where Relinker's fidelity axes will intersect. Vocabulary: **rung** (a named position), **reach** (a region: `local` / `local-network` / `remote`, aliases resolved by `resolve_rung`).
+Where a copy LIVES, as a real `dazzle_lib.Continuum` — `LOCALITY_CONTINUUM`, a **monopole**: possession is the rank-0 rest seat (`local 0` — the default the resolver assumes with no selection), the single reach extends outward (`intranet −1, internet −2`), and removal distance is `abs(rank)`. The machine boundary is the `local → intranet` **edge** (where direct file APIs stop), not a seat. `LOCALITY_SPACE` is a single-axis `ContinuumSpace.compose` — the hook where Relinker's fidelity axes (and the ledgered PROTOCOL axis) will intersect. Vocabulary: **rung** (a named position), **reach alias** (`local-network` → intranet, `remote` → internet), **scheme alias** (`http` / `https` / `url` → internet, tier semantics).
+
+Kind and locality are ORTHOGONAL axes — a protocol does not determine a place (`http://127.0.0.1/` is local). The kind → rung map is a producer-grounded heuristic: trustworthy where a producer vouches for the value's locality (unc/drive from real machine mappings, the path family from a local walk, url meaning "the web copy"). Kinds no producer vouches for — `ssh`, `sftp`, `ftp` — have **no rung**: excluded by rung filters, ordered last, never guessed, still selectable by name.
 
 | Symbol | Role |
 |---|---|
-| `locator_rung(kind)` | kind → rung (`drive → unc` — a mapped letter IS the share; unknown kinds → `None`, never guessed). Kind stays mechanism-of-derivation; rung is *where the value lives* |
-| `reach_of(rung)` | rung → `local` / `boundary` / `local-network` / `remote` |
-| `resolve_rung(name)` | rung or reach alias → rung; `DazzleLinkError` naming valid choices |
-| `order_by_preference(locators, prefer)` | stable sort by rank-distance from the preferred rung/reach; unknown-rung locators last |
-| `filter_by_reach(locators, only)` | reach alias = whole region; rung name = exact |
+| `locator_rung(kind)` | kind → rung (`drive → intranet` — a mapped letter IS the share; ssh/sftp/ftp and unknown kinds → `None`, never guessed) |
+| `reach_of(rung)` | rung → `local` / `local-network` / `remote` |
+| `resolve_rung(name)` | rung, reach alias, or scheme alias → rung; `DazzleLinkError` naming the rung/alias vocabulary (kind fallthrough lives in the selection functions, not here) |
+| `order_by_preference(locators, prefer)` | rung/alias spelling → stable sort by rank-distance; **any other spelling → kind preference** (that kind first, registry-free — gopher, s3, anything); rung-less locators last under rung preference |
+| `filter_by_reach(locators, only)` | rung/alias spelling → that rung's locators; **any other spelling → exact-kind filter** (registry-free; the record is the validator) |
 
 ## Target resolution
 
