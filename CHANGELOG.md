@@ -11,6 +11,15 @@ release (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.5.1] -- 2026-08-02
+
+**Documentation release** (docs are release content too).
+
+### Documentation
+- Read-the-Docs scaffold, mirroring dazzle-filekit's Sphinx pattern: `.readthedocs.yaml` (package self-install, `fail_on_warning`, PDF/epub), `docs/conf.py` + `docs/requirements.txt` (MyST markdown single-source, furo), `docs/index.md` landing with the stack diagram, and the changelog include page. The existing `docs/api.md` and `docs/api-stability.md` wire in unchanged.
+- `docs/api-stability.md`: the 0.4.0/0.5.0 surface joins the locked tables (the locality axis symbols + `SchemeAwareReachability`), with the vocabulary-lock note: the monopole ladder's LEVEL NAMES are user-facing selector spellings — widening is additive, renames follow the shim policy.
+- README: locality-axis row in the ownership table; badge row aligned with the library template (downloads, discussions).
+
 ## [0.5.0] -- 2026-07-30
 
 **The monopole reshape** (dazzlelink#25 train, DWP Amendment 4 -- hours after
@@ -224,7 +233,8 @@ injectable target resolver. Verified wire-compatible with the published
 - The `DazzleLinkData` extraction + resolver (stack phase P2) is **not yet
   shipped** -- it lands in a later release (Roadmap, issue #2).
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/DazzleLib/dazzle-linklib/compare/v0.2.2...v0.3.0

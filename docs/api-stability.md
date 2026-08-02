@@ -33,6 +33,10 @@ disappears or moves.
 | resolver (P2) | `resolve_target`, `ReachabilityResolver`, `default_reachability` |
 | operations (P2) | `export_link`, `import_link`, `create_link`, `recreate_link`, `apply_record_metadata` |
 | portable path family (0.3.0) | `path_family`, `populate_locators`, `default_path_variants` |
+| locality axis (0.4.0, reshaped 0.5.0) | `LOCALITY_CONTINUUM`, `LOCALITY_SPACE`, `REACH_ALIASES`, `SCHEME_ALIASES`, `locator_rung`, `reach_of`, `resolve_rung`, `order_by_preference`, `filter_by_reach` |
+| scheme-aware reachability (0.4.0) | `SchemeAwareReachability` |
+
+`LOCALITY_CONTINUUM` is a **monopole** `dazzle_lib.Continuum` — `{local: 0, intranet: -1, internet: -2}`, possession at the rank-0 rest seat, removal distance = `abs(rank)`. Its LEVEL NAMES are part of the locked vocabulary (user-facing selector spellings); widening the ladder is additive, but renaming or removing a rung follows the shim policy like any locked symbol. The kind → rung map is a producer-grounded heuristic (ssh/sftp/ftp deliberately have **no** rung); `resolve_rung` resolves rung names, reach aliases, and scheme aliases, while any OTHER spelling falls through to kind selection inside `order_by_preference`/`filter_by_reach` — registry-free by design (the record is the validator). `resolve_target(prefer=, only=, kinds=)` carries the same selection semantics on the walk.
 
 `DazzleLinkData` carries the v1 `.dazzlelink` schema plus the L2 additions: a
 typed locator list (`get_locators`/`add_locator`), an optional `content_id`, and
@@ -56,7 +60,7 @@ its consumer table.
 | Consumer | Symbols | Since |
 |---|---|---|
 | dazzlelink CLI tool (DazzleTools) | record model + export/import/scan/rebase | stack phase P2 |
-| dazzle-preservelib (planned / L3) | record model via the `[dazzlelink]` extra | stack phase P3 |
+| dazzle-preservelib (L3) | record model via the `[dazzlelink]` extra | stack phase P3 |
 | Relinker (planned) | locator list + `content_id` model | aspirational |
 
 Update this table whenever a consumer adopts a symbol -- it is the blast-radius

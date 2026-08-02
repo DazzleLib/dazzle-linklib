@@ -312,7 +312,7 @@ A back-compat alias for `DazzleLinkError` (the dazzlelink CLI tool and preserve 
 
 `to_dict()` returns this shape. The L2 additions (`link.locators`, top-level `content_id`, top-level `relations`) appear only when set, so a path-only record is exactly a v1 record.
 
-```jsonc
+```javascript
 {
   "schema_version": 1,
   "created_by": "DazzleLink v1",

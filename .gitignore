@@ -162,3 +162,6 @@ test_runs/
 revisions/
 private/claude/
 private/notes/
+
+# Sphinx build output
+docs/_build/
